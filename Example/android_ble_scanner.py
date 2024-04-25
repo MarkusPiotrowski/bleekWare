@@ -1,19 +1,18 @@
 """
 Run Bluetooth LE on Android
 """
+
 import asyncio
 
 import toga
 from toga import Button, MultilineTextInput
 from toga.style import Pack
-from toga.style.pack import COLUMN, ROW
+from toga.style.pack import COLUMN
 
 if toga.platform.current_platform == 'android':
     from .bleekWare.Scanner import Scanner as Scanner
-    from .bleekWare.Client import Client as Client
 else:
     from bleak import BleakScanner as Scanner
-    from bleak import BleakClient as Client
 
 
 class BleScannerApp(toga.App):
@@ -40,17 +39,17 @@ class BleScannerApp(toga.App):
             'Manual start/stop scan (with callback)',
             on_press=self.manual_scan_with_callback,
         )
-        self.manual_button_gen = Button (
+        self.manual_button_gen = Button(
             'Manual start/stop scan (with generator)',
             on_press=self.manual_scan_with_generator,
         )
         self.device_list = MultilineTextInput(
             readonly=True,
-            style=Pack(padding=(10,5), height=200),
+            style=Pack(padding=(10, 5), height=200),
         )
         self.data_list = MultilineTextInput(
             readonly=True,
-            style=Pack(padding=(10,5), height=200),
+            style=Pack(padding=(10, 5), height=200),
         )
         box = toga.Box(
             children=[
@@ -61,10 +60,12 @@ class BleScannerApp(toga.App):
                 self.device_list,
                 self.data_list,
             ],
-            style=Pack(direction=COLUMN)
+            style=Pack(direction=COLUMN),
         )
-        
-        self.main_window = toga.MainWindow(title='Android BLE Scanner Demo App')
+
+        self.main_window = toga.MainWindow(
+            title='Android BLE Scanner Demo App'
+        )
         self.main_window.content = box
         self.main_window.show()
         self.scan_on = False
@@ -98,7 +99,7 @@ class BleScannerApp(toga.App):
         result = await Scanner.discover(return_adv=True)
         self.device_list.value += '...scanning stopped.\n'
         self.show_scan_result(result)
-    
+
     async def manual_scan_with_callback(self, widget):
         """Start and stop a scan manually and display results via callback.
 
@@ -137,7 +138,7 @@ class BleScannerApp(toga.App):
                     self.device_list.value += '...scanning stopped.\n'
                     break
         else:
-            self.scan_on = False            
+            self.scan_on = False
 
     def scan_callback(self, device, advertisement_data):
         """Receive data from scanner each time a device is found.
