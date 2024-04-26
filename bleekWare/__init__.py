@@ -1,6 +1,10 @@
 """
-bleekWare, a limited replacement for bleak to use BLE on Android
+bleekWare, a limited replacement for Bleak to use BLE on Android
 within the BeeWare framework.
+
+The code is heavily inspired by Bleak (https://github.com/hbldh/bleak).
+Some parts may virtually be identical for the sake of compatibility to
+Bleak.
 
 (c) 2024 by Markus Piotrowski
 
@@ -36,28 +40,19 @@ class bleekWareError(Exception):
 
 
 class bleekWareCharacteristicNotFoundError(bleekWareError):
-    """
-    Exception which is raised if a device does not support a characteristic.
-
-    """
-
+    """A characteristic is not supported by a device."""
+    
     def __init__(self, uuid):
         """
-        Args:
-            uuid (str): UUID of the characteristic which was not found
+        uuid (str): UUID of the characteristic which was not found
         """
         super().__init__(f"Characteristic {uuid} was not found!")
         self.char_specifier = uuid
 
 
 class bleekWareDeviceNotFoundError(bleekWareError):
-    """
-    Exception which is raised if a device can not be found by ``connect``,
-    ``pair`` and ``unpair``.
-    This is the case if the OS Bluetooth stack has never seen this device
-    or it was removed and forgotten.
-    """
-
+    """A device couldn't be found."""
+    
     def __init__(self, identifier, *args):
         """
         Args:
