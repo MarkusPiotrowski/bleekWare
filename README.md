@@ -5,10 +5,13 @@ A limited Bleak replacement for accessing Bluetooth LE on Android in Python apps
 **bleekWare** is a limited drop-in replacement for [Bleak](https://github.com/hbldh/bleak) in [BeeWare](https://beeware.org/) for Android apps.
 
 While Bleak, the 'Bluetooth Low Energy platform Agnostic Klient' allows using Python to access Bluetooth LE in a cross-platform
-fashion, it's platform backend for Android requires the usage of Kivy, which, unfortunately, is not compatible with the BeeWare tools.
+fashion, it's existing platform backend for Android requires [pyython-for-android (P4A)](https://python-for-android.readthedocs.io/en/latest/index.html)
+and can be used in [Kivy](https://kivy.org/). BeeWare, however, uses [Chaquopy](https://chaquo.com/chaquopy/) to use Python in Android. For discussion
+if the existing Android backend of Bleak can be modified for using it in BeeWare or to add another Android backend to Bleak, read [here](https://github.com/beeware/toga/issues/740),
+[here](https://github.com/beeware/beeware/issues/181) and [here](https://github.com/hbldh/bleak/blob/5e294f4fcdc3effac147d43e29697373e3209901/docs/backends/android.rst#L14).
 
-bleekWare is 'usage compatible' to Bleak, meaning that it's methods have the same name and return the same data. Thus, using platform-dependent
-import switches, the same code runs on Linux, Mac and Windows using Bleak or on Android using bleekWare.
+bleekWare is 'usage compatible' to Bleak, meaning that it's methods have the same names and return the same data as Bleak. Thus, using platform-dependent
+import switches, the same code can run on Linux, Mac and Windows using Bleak or on Android using bleekWare.
 
 ## Limitations
 bleekWare is a _limited_ replacement for Bleak. Not all functions are covered:
@@ -41,7 +44,7 @@ The current set-up procedure requires some manual intervention and puts the blee
    
    Replace `your_project` with the actual folder name of your project.
 5. If your code runs fine on your desktop platform, set up an Android project as described in the [BeeWare tutorial](https://docs.beeware.org/en/latest/tutorial/tutorial-5/android.html>)
-6. Now, download the bleekWare module as zip file from here and place it as unzipped folder in your apps's folder:
+6. Now, download the [bleekWare module as zip file](https://github.com/MarkusPiotrowski/bleekWare/releases/download/0.0.0.1/bleekWare.zip) and place the unzipped bleekWare subfolder in your apps's folder:
 
    ```
    beeware_venv/
@@ -51,6 +54,9 @@ The current set-up procedure requires some manual intervention and puts the blee
       |- src/
       |  |- your_project/
       |  |  |- bleekWare/         <---
+      |  |  |  |- __init__.py
+      |  |  |  |- Client.py
+      |  |  |  |- Scanner.py
       |  |  |- resources/
       |  |  |- __init__.py
       |  |  |- __main__.py
@@ -80,7 +86,7 @@ The current set-up procedure requires some manual intervention and puts the blee
 ## Example code
 See [`android_ble_scanner.py`](Example/android_ble_scanner.py) in the Example folder for different BLE scanning examples. The code is tested to run on Windows (using Bleak) and Android devices (using bleekWare). It should be running on Mac and Linux as well (again using Bleak), but this hasn't been tested.
 
-Connecting to a BLE device and reading from or writing to it's characteristics is dependendent on the device's capabilities; thus providing a general working example app isn't possible. But here is an outline for connecting to a BLE device and reading from a notifying service:
+Connecting to a BLE device and reading from or writing to it's characteristics is dependent on the device's capabilities; thus providing a general working example app isn't possible. But here is an outline for connecting to a BLE device and reading from a notifying service:
 
 ```python
 """
@@ -91,7 +97,7 @@ import asyncio
 
 import toga
 from toga.style import Pack
-from toga.style.pack import COLUMN, ROW
+from toga.style.pack import COLUMN
 from toga import Button, MultilineTextInput
 
 if toga.platform.current_platform == 'android':
@@ -119,11 +125,11 @@ class bleekWareExample(toga.App):
         )
         self.message_box = MultilineTextInput(
             readonly=True,
-            style=Pack(padding=(10,5), height=200),
+            style=Pack(padding=(10, 5), height=200),
         )
         self.data_box = MultilineTextInput(
             readonly=True,
-            style=Pack(padding=(10,5), height=200),
+            style=Pack(padding=(10, 5), height=200),
         )
         box = toga.Box(
             children=[
@@ -144,6 +150,11 @@ class bleekWareExample(toga.App):
         try:
             # Replace the name of your device here:
             device = await Scanner.find_device_by_name('your_device_by_name')
+
+            # Alternatively, you may want to find your device by it's
+            # MAC address or UUID (on Mac):
+            # device = await Scanner.find_device_by_address('AA:BB:CC:DD:EE:FF'): 
+
         except (OSError, BLEError) as e:
             self.message_box.value += (
                 f'Bluetooth not available. Error: {str(e)}\n'
