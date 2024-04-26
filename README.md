@@ -26,6 +26,7 @@ The current set-up procedure requires some manual intervention and puts the blee
 2. Write and test some code for a desktop computer (Linux, Mac or Window) using Bleak to access Bluetooth LE
 3. Before setting up an Android project, copy the following lines into the `tool.briefcase.app.bluetooth.android` section of your `pyproject.toml` file, e.g. below the
 `build_gradle_dependencies`:
+
    ```
    build_gradle_extra_content = "android.defaultConfig.python.staticProxy('your_project.bleekWare.Scanner',  'your_project.bleekWare.Client')"
    android_manifest_extra_content = """
@@ -37,9 +38,11 @@ The current set-up procedure requires some manual intervention and puts the blee
    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
    """
    ```
+   
    Replace `your_project` with the actual folder name of your project.
-4. If your code runs fine on your desktop platform, set up an Android project as described in the [BeeWare tutorial](https://docs.beeware.org/en/latest/tutorial/tutorial-5/android.html>)
+5. If your code runs fine on your desktop platform, set up an Android project as described in the [BeeWare tutorial](https://docs.beeware.org/en/latest/tutorial/tutorial-5/android.html>)
 6. Now, download the bleekWare module as zip file from here and place it as unzipped folder in your apps's folder:
+
    ```
    beeware_venv/
    |- your_project/
@@ -56,7 +59,8 @@ The current set-up procedure requires some manual intervention and puts the blee
       |- tests/
     ...
    ```
-7. If your application should run cross-platform and you require both Bleak and bleekWare, you may want to use conditional imports like this:
+   Note: If you use the 'Download ZIP' option from the `<> Code` button above, the download will contain the whole repository. Copy only the bleekWare subfolder to your project.
+8. If your application should run cross-platform and you require both Bleak and bleekWare, you may want to use conditional imports like this:
    ```python
    import toga
 
@@ -74,7 +78,7 @@ The current set-up procedure requires some manual intervention and puts the blee
    bleekWare also has it's own Exception class; if your code is catching `BleakException`s it should also catch `bleekWareException`. 
 
 ## Example code
-See `android_ble_scanner.py` in the Example folder for different BLE scanning examples. The code is tested to run on Windows (using Bleak) and Android devices (using bleekWare). It should be running on Mac and Linux as well (again using Bleak), but this hasn't been tested.
+See [`android_ble_scanner.py`](Example/android_ble_scanner.py) in the Example folder for different BLE scanning examples. The code is tested to run on Windows (using Bleak) and Android devices (using bleekWare). It should be running on Mac and Linux as well (again using Bleak), but this hasn't been tested.
 
 Connecting to a BLE device and reading from or writing to it's characteristics is dependendent on the device's capabilities; thus providing a general working example app isn't possible. But here is an outline for connecting to a BLE device and reading from a notifying service:
 
