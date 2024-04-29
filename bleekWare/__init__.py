@@ -41,7 +41,7 @@ class bleekWareError(Exception):
 
 class bleekWareCharacteristicNotFoundError(bleekWareError):
     """A characteristic is not supported by a device."""
-    
+
     def __init__(self, uuid):
         """
         uuid (str): UUID of the characteristic which was not found
@@ -52,7 +52,7 @@ class bleekWareCharacteristicNotFoundError(bleekWareError):
 
 class bleekWareDeviceNotFoundError(bleekWareError):
     """A device couldn't be found."""
-    
+
     def __init__(self, identifier, *args):
         """
         Args:

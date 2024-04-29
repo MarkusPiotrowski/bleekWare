@@ -3,6 +3,7 @@ bleekWare.Scanner
 """
 
 import asyncio
+import inspect
 import time
 
 from java import jclass, jint, jvoid, Override, static_proxy
@@ -94,7 +95,12 @@ class _PythonScanCallback(static_proxy(ScanCallback)):
 
         scan_result[address] = (new_device, advertisement)
         if self.scanner.detection_callback:
-            self.scanner.detection_callback(new_device, advertisement)
+            if inspect.iscoroutinefunction(self.scanner.detection_callback):
+                asyncio.create_task(
+                    self.scanner.detection_callback(new_device, advertisement)
+                )
+            else:
+                self.scanner.detection_callback(new_device, advertisement)
 
 
 class AdvertisementData:

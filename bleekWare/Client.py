@@ -4,6 +4,7 @@ bleekware.Client
 
 import asyncio
 import functools
+import inspect
 
 from java import jarray, jbyte, jclass, jint, jvoid, Override, static_proxy
 from java.util import UUID
@@ -103,8 +104,6 @@ class _PythonGattCallback(static_proxy(BluetoothGattCallback)):
         """
         if status == BluetoothGatt.GATT_SUCCESS:
             self.client.mtu = mtu
-        else:
-            print("Failed to read characteristic")
 
 
 class Client:
@@ -126,12 +125,12 @@ class Client:
         ).singletonThis
 
         if isinstance(address_or_ble_device, BLEDevice):
-            self.address = address_or_ble_device.address
+            self._address = address_or_ble_device.address
             self.device = address_or_ble_device.details
         else:
-            self.address = address_or_ble_device
+            self._address = address_or_ble_device
             self.device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(
-                self.address
+                self._address
             )
 
         self.disconnected_callback = (
@@ -145,6 +144,9 @@ class Client:
         self.gatt = None
         self.services = []
         self.mtu = 23
+
+    def __str__(self):
+        return f'{self.__class__.__name__}, {self.address}'
 
     async def __aenter__(self):
         await self.connect()
@@ -179,9 +181,8 @@ class Client:
                 await asyncio.sleep(0.1)
             self.services = await self.get_services()
 
+            # Ask for max Mtu size
             self.gatt.requestMtu(517)
-            await asyncio.sleep(1)
-            print(f'\n\nmtu: {self.mtu}\n\n')
 
     async def disconnect(self):
         """Disconnect from connected GATT server."""
@@ -239,7 +240,12 @@ class Client:
             while self.notification_callback:
                 if received_data:
                     data = received_data.pop()
-                    callback(char_specifier, bytearray(data))
+                    if inspect.iscoroutinefunction(callback):
+                        asyncio.create_task(
+                            callback(char_specifier, bytearray(data))
+                        )
+                    else:
+                        callback(char_specifier, bytearray(data))
                 await asyncio.sleep(0.1)
 
     async def stop_notify(self, char_specifier):
@@ -308,6 +314,14 @@ class Client:
     @property
     def is_connected(self):
         return False if self.gatt is None else True
+
+    @property
+    def mtu_size(self):
+        return self.mtu
+
+    @property
+    def address(self):
+        return self._address
 
     def _find_characteristic(self, uuid):
         """Find and return characteristic object by UUID. PRIVATE."""
