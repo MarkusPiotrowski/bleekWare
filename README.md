@@ -4,14 +4,10 @@ A limited Bleak replacement for accessing Bluetooth LE on Android in Python apps
 ## Introduction
 **bleekWare** is a limited drop-in replacement for [Bleak](https://github.com/hbldh/bleak) in [BeeWare](https://beeware.org/) for Android apps.
 
-While Bleak, the 'Bluetooth Low Energy platform Agnostic Klient' allows using Python to access Bluetooth LE in a cross-platform
-fashion, it's existing platform backend for Android requires [pyython-for-android (P4A)](https://python-for-android.readthedocs.io/en/latest/index.html)
-and can be used in [Kivy](https://kivy.org/). BeeWare, however, uses [Chaquopy](https://chaquo.com/chaquopy/) to use Python in Android. For discussion
-if the existing Android backend of Bleak can be modified for using it in BeeWare or to add another Android backend to Bleak, read [here](https://github.com/beeware/toga/issues/740),
-[here](https://github.com/beeware/beeware/issues/181) and [here](https://github.com/hbldh/bleak/blob/5e294f4fcdc3effac147d43e29697373e3209901/docs/backends/android.rst#L14).
+Bleak, the 'Bluetooth Low Energy platform Agnostic Klient', allows using Python to access Bluetooth LE cross-platform, but it's existing platform backend for Android requires [python-for-android (P4A)](https://python-for-android.readthedocs.io/en/latest/index.html) and can be used e.g. in [Kivy](https://kivy.org/) but not in BeeWare. BeeWare uses [Chaquopy](https://chaquo.com/chaquopy/) as bridging tool between Python and Android. For discussion
+if the existing Android backend of Bleak can be modified for using it in BeeWare or to add another Android backend to Bleak, read [here](https://github.com/beeware/toga/issues/740), [here](https://github.com/beeware/beeware/issues/181) and [here](https://github.com/hbldh/bleak/blob/5e294f4fcdc3effac147d43e29697373e3209901/docs/backends/android.rst#L14).
 
-bleekWare is 'usage compatible' to Bleak, meaning that it's methods have the same names and return the same data as Bleak. Thus, using platform-dependent
-import switches, the same code can run on Linux, Mac and Windows using Bleak or on Android using bleekWare.
+bleekWare makes use of Chaquopy to access the native Android's Bluetooth LE APIs. bleekWare is 'usage compatible' to Bleak, meaning that it's methods have the same names and return the same data as Bleak. Thus, using platform-dependent import switches, the same code can run on Linux, Mac and Windows using Bleak or on Android using bleekWare.
 
 ## Limitations
 bleekWare is a _limited_ replacement for Bleak. Not all functions are covered:
@@ -20,7 +16,7 @@ bleekWare is a _limited_ replacement for Bleak. Not all functions are covered:
 3. bleekWare is work in progress
 4. bleekWare is made for Android apps made with BeeWare and requires [Chaquopy](https://chaquo.com/chaquopy/) to access the Android API
 5. bleekWare requries 128-bit UUID _strings_ to address services and characteristics
-6. Callback functions (like `disconnect_callback` or `notify_callback`)in bleekWare can't be _asynchronous_
+6. ~~Callback functions (like `detection_callback` or `notify_callback`)in bleekWare can't be _asynchronous_~~
 
 ## How to use it
 The current set-up procedure requires some manual intervention and puts the bleekWare code next to your app code. This may change in the future.
