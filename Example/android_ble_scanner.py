@@ -77,12 +77,12 @@ class BleScannerApp(toga.App):
         scanner.discovered_devices_and_advertisement_data
         contains each discovered device only once.
         """
-        self.device_list.value = 'Start BLE scan...\n'
-        self.data_list.value = ''
+        self.print_device('Start BLE scan...', clear=True)
+        self.print_data(clear=True)
 
         async with Scanner() as scanner:
             await asyncio.sleep(10)
-            self.device_list.value += '...scanning stopped.\n'
+            self.print_device('...scanning stopped.')
             self.show_scan_result(
                 scanner.discovered_devices_and_advertisement_data
             )
@@ -93,29 +93,25 @@ class BleScannerApp(toga.App):
         'return_adv=True' returns a dic.
         'return_adv=False' would just return a list of discovered devices.
         """
-        self.device_list.value = 'Start BLE scan...\n'
-        self.data_list.value = ''
+        self.print_device('Start BLE scan...', clear=True)
+        self.print_data(clear=True)
 
         result = await Scanner.discover(return_adv=True)
-        self.device_list.value += '...scanning stopped.\n'
+        self.print_device('...scanning stopped.')
         self.show_scan_result(result)
 
     async def manual_scan_with_callback(self, widget):
-        """Start and stop a scan manually and display results via callback.
-
-        Callback must be synchronous (for bleekWare).
-        """
-
+        """Start and stop a scan manually and display results via callback."""
         if not self.scan_on:
             self.scanner = Scanner(self.scan_callback)
             await self.scanner.start()
             self.scan_on = True
-            self.device_list.value = 'Start BLE scan...\n'
-            self.data_list.value = 'Device data: \n'
+            self.print_device('Start BLE scan...', clear=True)
+            self.print_data('Device data:', clear=True)
         else:
             await self.scanner.stop()
             self.scan_on = False
-            self.device_list.value += '...scanning stopped.\n'
+            self.print_device('...scanning stopped.')
 
     async def manual_scan_with_generator(self, widget):
         """Start and stop a scan manually and display results via generator.
@@ -127,15 +123,16 @@ class BleScannerApp(toga.App):
             self.scan_on = True
             self.scanner = Scanner()
             await self.scanner.start()
-            self.device_list.value = 'Start BLE scan...\n'
-            self.data_list.value = 'Device data: \n'
+            self.print_device('Start BLE scan...', clear=True)
+            self.print_data('Device data:', clear=True)
             async for device, data in self.scanner.advertisement_data():
-                self.device_list.value += self.get_name(device) + '\n'
-                self.data_list.value += str(device) + '\n'
-                self.data_list.value += str(data) + '\n\n'
+                self.print_device(self.get_name(device))
+                self.print_data(str(device))
+                self.print_data(str(data))
+                self.print_data()
                 if not self.scan_on:
                     await self.scanner.stop()
-                    self.device_list.value += '...scanning stopped.\n'
+                    self.print_device('...scanning stopped.')
                     break
         else:
             self.scan_on = False
@@ -146,12 +143,12 @@ class BleScannerApp(toga.App):
         The callback is called on each detection event, so the same
         device can pop up several times during the scan.
 
-        For the moment, the callback function in bleekWare must be
-        synchronous.
+        This callback can be a normal or an async function.
         """
-        self.device_list.value += self.get_name(device) + '\n'
-        self.data_list.value += str(device) + '\n'
-        self.data_list.value += str(advertisement_data) + '\n\n'
+        self.print_device(self.get_name(device))
+        self.print_data(str(device))
+        self.print_data(str(advertisement_data))
+        self.print_data()
 
     def show_scan_result(self, data):
         """Show names of found devices and attached advertisment data.
@@ -159,12 +156,13 @@ class BleScannerApp(toga.App):
         'data' is a dictionary, where the keys are the BLE addresses
         and the values are tuples of BLE device, advertisement data.
         """
-        self.device_list.value += 'Found devices: \n'
-        self.data_list.value += 'Device data: \n'
+        self.print_device('Found devices:')
+        self.print_data('Device data:', clear=True)
         for key in data:
             device, adv_data = data[key]
-            self.device_list.value += self.get_name(device) + '\n'
-            self.data_list.value += f'{device}\n{adv_data}\n\n'
+            self.print_device(self.get_name(device))
+            self.print_data(f'{device}\n{adv_data}')
+            self.print_data()
 
     def get_name(self, device):
         """Return name or address of BLE device."""
@@ -172,6 +170,20 @@ class BleScannerApp(toga.App):
             return device.name
         else:
             return f'No name ({device.address})'
+
+    def print_device(self, device='', clear=False):
+        """Write device name to MultilineTextInput for devices."""
+        if clear:
+            self.device_list.value = ''
+        self.device_list.value += device + '\n'
+        self.device_list.scroll_to_bottom()
+
+    def print_data(self, data='', clear=False):
+        """Write device data to MultilineTextInput for device data."""
+        if clear:
+            self.data_list.value = ''
+        self.data_list.value += data + '\n'
+        self.data_list.scroll_to_bottom()
 
 
 def main():
