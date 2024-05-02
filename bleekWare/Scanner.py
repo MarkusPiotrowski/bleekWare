@@ -9,7 +9,6 @@ import time
 from java import jclass, jint, jvoid, Override, static_proxy
 from java.util import HashMap
 
-# from android.bluetooth.le import BluetoothLeScanner
 from android.bluetooth.le import ScanCallback, ScanResult, ScanSettings
 from android.bluetooth import BluetoothAdapter
 

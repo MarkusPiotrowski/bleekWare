@@ -325,6 +325,11 @@ class Client:
 
     def _find_characteristic(self, uuid):
         """Find and return characteristic object by UUID. PRIVATE."""
+        if len(uuid) == 4:
+            uuid = f'0000{uuid}-0000-1000-8000-00805f9b34fb'
+        elif len(uuid) == 8:
+            uuid = f'{uuid}-0000-1000-8000-00805f9b34fb'
+
         for service in self.services:
             if uuid in service.characteristics:
                 return service.service.getCharacteristic(UUID.fromString(uuid))
