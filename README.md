@@ -1,21 +1,20 @@
 # bleekWare   (WIP!)
-A limited Bleak replacement for accessing Bluetooth LE on Android in Python apps made with BeeWare.
+A limited Bleak complement for accessing Bluetooth LE on Android in Python apps made with BeeWare.
 
 ## Introduction
-**bleekWare** is a limited drop-in replacement for [Bleak](https://github.com/hbldh/bleak) in [BeeWare](https://beeware.org/) for Android apps.
+**bleekWare** is a limited complement for [Bleak](https://github.com/hbldh/bleak) in [BeeWare](https://beeware.org/) apps to access Bluetooth LE on Android devices.
 
-Bleak, the 'Bluetooth Low Energy platform Agnostic Klient', allows using Python to access Bluetooth LE cross-platform, but it's existing platform backend for Android requires [python-for-android (P4A)](https://python-for-android.readthedocs.io/en/latest/index.html) and can be used e.g. in [Kivy](https://kivy.org/) but not in BeeWare. BeeWare uses [Chaquopy](https://chaquo.com/chaquopy/) as bridging tool between Python and Android. For discussion
-if the existing Android backend of Bleak can be modified for using it in BeeWare or to add another Android backend to Bleak, read [here](https://github.com/beeware/toga/issues/740), [here](https://github.com/beeware/beeware/issues/181) and [here](https://github.com/hbldh/bleak/blob/5e294f4fcdc3effac147d43e29697373e3209901/docs/backends/android.rst#L14).
+Bleak, the 'Bluetooth Low Energy platform Agnostic Klient', allows using Python to access Bluetooth LE cross-platform, but it's existing platform backend for Android requires [python-for-android (P4A)](https://python-for-android.readthedocs.io/en/latest/index.html) and can be used e.g. in [Kivy](https://kivy.org/) but not in BeeWare. BeeWare uses [Chaquopy](https://chaquo.com/chaquopy/) as bridging tool between Python and Android. For discussion if the existing Android backend of Bleak can be modified for using it in BeeWare or to add another Android backend to Bleak, read [here](https://github.com/beeware/toga/issues/740), [here](https://github.com/beeware/beeware/issues/181) and [here](https://github.com/hbldh/bleak/blob/5e294f4fcdc3effac147d43e29697373e3209901/docs/backends/android.rst#L14).
 
 bleekWare makes use of Chaquopy to access the native Android's Bluetooth LE APIs. bleekWare is 'usage compatible' to Bleak, meaning that it's methods have the same names and return the same data as Bleak. Thus, using platform-dependent import switches, the same code can run on Linux, Mac and Windows using Bleak or on Android using bleekWare.
 
 ## Limitations
-bleekWare is a _limited_ replacement for Bleak. Not all functions are covered:
+bleekWare is a _limited_ complement for Bleak. Not all functions are covered:
 1. Deprecated parts of Bleak have not been replicated in bleekWare
-2. bleekWare primarily serves me in my own small project. Functionality that I don't require (e.g. bonding) is likely not implemented. However, pull requests to extend the functionality of bleekWare are welcome
+2. bleekWare primarily serves me in my own small projects. Functionality that I don't require (e.g. bonding) is likely not implemented. However, pull requests to extend the functionality of bleekWare are welcome
 3. bleekWare is work in progress
 4. bleekWare is made for Android apps made with BeeWare and requires [Chaquopy](https://chaquo.com/chaquopy/) to access the Android API
-5. bleekWare requries 128-bit UUID _strings_ to address services and characteristics
+5. bleekWare requires ~128-bit~ UUID _strings_ to address services and characteristics
 6. ~~Callback functions (like `detection_callback` or `notify_callback`)in bleekWare can't be _asynchronous_~~
 
 ## How to use it
@@ -40,7 +39,7 @@ The current set-up procedure requires some manual intervention and puts the blee
    
    Replace `your_project` with the actual folder name of your project.
 5. If your code runs fine on your desktop platform, set up an Android project as described in the [BeeWare tutorial](https://docs.beeware.org/en/latest/tutorial/tutorial-5/android.html>)
-6. Now, download the [bleekWare module as zip file](https://github.com/MarkusPiotrowski/bleekWare/releases/download/0.1.0/bleekWare.zip) and place the unzipped bleekWare subfolder in your apps's folder:
+6. Now, download the [bleekWare module as zip file](https://github.com/MarkusPiotrowski/bleekWare/releases/download/0.0.0.1/bleekWare.zip) and place the unzipped bleekWare subfolder in your apps's folder:
 
    ```
    beeware_venv/
@@ -80,8 +79,10 @@ The current set-up procedure requires some manual intervention and puts the blee
    bleekWare also has it's own Exception class; if your code is catching `BleakException`s it should also catch `bleekWareException`. 
 
 ## Example code
+### Scanner class
 See [`android_ble_scanner.py`](Example/android_ble_scanner.py) in the Example folder for different BLE scanning examples. The code is tested to run on Windows (using Bleak) and Android devices (using bleekWare). It should be running on Mac and Linux as well (again using Bleak), but this hasn't been tested.
 
+### Client class
 Connecting to a BLE device and reading from or writing to it's characteristics is dependent on the device's capabilities; thus providing a general working example app isn't possible. But here is an outline for connecting to a BLE device and reading from a notifying service:
 
 ```python
