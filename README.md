@@ -39,7 +39,7 @@ The current set-up procedure requires some manual intervention and puts the blee
    
    Replace `your_project` with the actual folder name of your project.
 5. If your code runs fine on your desktop platform, set up an Android project as described in the [BeeWare tutorial](https://docs.beeware.org/en/latest/tutorial/tutorial-5/android.html>)
-6. Now, download the [bleekWare module as zip file](https://github.com/MarkusPiotrowski/bleekWare/releases/download/0.0.0.1/bleekWare.zip) and place the unzipped bleekWare subfolder in your apps's folder:
+6. Now, download the [bleekWare module as zip file](https://github.com/MarkusPiotrowski/bleekWare/releases/download/0.1.1/bleekWare.zip) and place the unzipped bleekWare subfolder in your apps's folder:
 
    ```
    beeware_venv/
@@ -56,7 +56,7 @@ The current set-up procedure requires some manual intervention and puts the blee
       |  |  |- __init__.py
       |  |  |- __main__.py
       |  |  |- app.py
-      |  |- your project.dist-info/
+      |  |- your_project.dist-info/
       |- tests/
     ...
    ```
