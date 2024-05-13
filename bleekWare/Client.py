@@ -26,6 +26,7 @@ from . import bleekWareError, bleekWareCharacteristicNotFoundError
 received_data = []
 status_message = []
 services = []
+async_callbacks = set()
 
 # Client Characteristic Configuration Descriptor
 CCCD = '00002902-0000-1000-8000-00805f9b34fb'
@@ -116,8 +117,6 @@ class Client:
         address_or_ble_device,
         disconnected_callback=None,
         services=None,
-        *,
-        timeout=10.0,
         **kwargs,
     ):
         self.activity = self.context = jclass(
@@ -140,9 +139,9 @@ class Client:
         )
         if services:
             raise NotImplementedError()
-        self.adapter = kwargs.get('adapter', kwargs.get('device', None))
+        self.adapter = None
         self.gatt = None
-        self.services = []
+        self._services = []
         self.mtu = 23
 
     def __str__(self):
@@ -179,10 +178,12 @@ class Client:
             # Read the services
             while not services:
                 await asyncio.sleep(0.1)
-            self.services = await self.get_services()
+            self._services = await self._get_services()
 
             # Ask for max Mtu size
             self.gatt.requestMtu(517)
+
+        return True  # For Bleak backwards compatibility
 
     async def disconnect(self):
         """Disconnect from connected GATT server."""
@@ -195,39 +196,25 @@ class Client:
             status_message.append(e)
 
         self.gatt = None
-        self.services.clear()
+        self._services.clear()
         services.clear()
         status_message.clear()
         received_data.clear()
         Client.client = None
 
-    async def get_services(self):
-        """Read and store the announced services of a GATT server.
+        return True  # For Bleak backwards compatibility
 
-        The characteristics of the services are also read. Both are
-        stored in a list of BLEGattService objects.
-        """
-        if self.services:
-            return self.services
-        for service in services:
-            new_service = BLEGattService(service)
-            characts = service.getCharacteristics().toArray()
-            for charact in characts:
-                new_service.characteristics.append(str(charact.getUuid()))
-            self.services.append(new_service)
-        return self.services
-
-    async def start_notify(self, char_specifier, callback, *kwargs):
+    async def start_notify(self, uuid, callback, **kwargs):
         """Start notification of a notifying characteristic.
 
-        ``char_specifier`` must be an UUID as string
-        ``callback`` must be a synchronous callback method
+        ``uuid`` (characteristic specifier) must be an UUID as string
+        ``callback`` can be a usual or async callback method
         """
         if not self.is_connected:
             raise bleekWareError('Client not connected')
 
         self.notification_callback = callback
-        characteristic = self._find_characteristic(char_specifier)
+        characteristic = self._find_characteristic(uuid)
         if characteristic:
             self.gatt.setCharacteristicNotification(characteristic, True)
             descriptor = characteristic.getDescriptor(UUID.fromString(CCCD))
@@ -241,16 +228,19 @@ class Client:
                 if received_data:
                     data = received_data.pop()
                     if inspect.iscoroutinefunction(callback):
-                        asyncio.create_task(
-                            callback(char_specifier, bytearray(data))
+                        task = asyncio.create_task(
+                            callback(characteristic, bytearray(data))
                         )
+                        # Make 'hard' reference to avoid GCing of the task
+                        async_callbacks.add(task)
+                        task.add_done_callback(async_callbacks.discard)
                     else:
-                        callback(char_specifier, bytearray(data))
+                        callback(characteristic, bytearray(data))
                 await asyncio.sleep(0.1)
 
-    async def stop_notify(self, char_specifier):
+    async def stop_notify(self, uuid):
         """Stop notification of a notifying characteristic."""
-        characteristic = self._find_characteristic(char_specifier)
+        characteristic = self._find_characteristic(uuid)
         if characteristic:
             self.gatt.setCharacteristicNotification(characteristic, False)
             descriptor = characteristic.getDescriptor(UUID.fromString(CCCD))
@@ -264,7 +254,7 @@ class Client:
     async def read_gatt_char(self, uuid):
         """Read from a characteristic.
 
-        For bleekWare, you must pass the characteristic's 128 bit UUID
+        For bleekWare, you must pass the characteristic's UUID
         as string.
         """
         characteristic = self._find_characteristic(uuid)
@@ -279,7 +269,7 @@ class Client:
     async def write_gatt_char(self, uuid, data, response=None):
         """Write to a characteristic.
 
-        For bleekWare, you must pass the characteristic's 128 bit UUID
+        For bleekWare, you must pass the characteristic's UUID
         as string.
         """
         characteristic = self._find_characteristic(uuid)
@@ -312,6 +302,10 @@ class Client:
             raise bleekWareCharacteristicNotFoundError(uuid)
 
     @property
+    def address(self):
+        return self._address
+
+    @property
     def is_connected(self):
         return False if self.gatt is None else True
 
@@ -320,8 +314,33 @@ class Client:
         return self.mtu
 
     @property
-    def address(self):
-        return self._address
+    def services(self):
+        """Return list of services and their characteristics.
+
+        As list of BLEGattService objects.
+        """
+        if not self._services:
+            raise bleekWareError(
+                'Service Discovery has not been performed yet'
+            )
+
+        return self._services
+
+    async def _get_services(self):
+        """Read and store the announced services of a GATT server. PRIVAT.
+
+        The characteristics of the services are also read. Both are
+        stored in a list of BLEGattService objects.
+        """
+        if self._services:
+            return self._services
+        for service in services:
+            new_service = BLEGattService(service)
+            characts = service.getCharacteristics().toArray()
+            for charact in characts:
+                new_service.characteristics.append(str(charact.getUuid()))
+            self._services.append(new_service)
+        return self._services
 
     def _find_characteristic(self, uuid):
         """Find and return characteristic object by UUID. PRIVATE."""
@@ -329,8 +348,7 @@ class Client:
             uuid = f'0000{uuid}-0000-1000-8000-00805f9b34fb'
         elif len(uuid) == 8:
             uuid = f'{uuid}-0000-1000-8000-00805f9b34fb'
-
-        for service in self.services:
+        for service in self._services:
             if uuid in service.characteristics:
                 return service.service.getCharacteristic(UUID.fromString(uuid))
         return None
