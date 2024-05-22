@@ -22,16 +22,16 @@ example, which demonstrates some use cases.
 
 - **detection_callback**: Regular or asynchronous method to call when a device
 is detected or advertising data of a detected device changes
-- **service_uuids**: Not implemented (yet)
-- **scanning_mode**: The scan mode (`'active'` or `'passive'`), usually set to `'passive'`
+- **service_uuids**: `list` of service UUIDs as `string`s
+- **scanning_mode**: The scan mode (`'active'` or `'passive'`)
 - **Additional keyword argument**: Without function
 
-The detection_callback must receive a `BLEDevice` object and an `AdvertisementData`
-object. 
+The **detection_callback** must receive a `BLEDevice` object and an `AdvertisementData`
+object. **scanning_mode** `'active'` sets Android's `ScanSettings.SCAN_MODE_LOW_LATENCY`, 
+`'active'` sets `ScanSettings.SCAN_MODE_OPPORTUNISTIC`.
 
 #### Differences to `BleakScanner`
-Filtering by service UUIDs is not supported yet. A number of optional keyword arguments are
-not handled.
+Additional keyword arguments are not handled.
 
 ### `Scanner` properties
 
