@@ -17,6 +17,7 @@ from . import check_for_permissions
 
 
 scan_result = {}
+async_callbacks = set()  # To keep reference for callbacks
 
 
 class _PythonScanCallback(static_proxy(ScanCallback)):
@@ -50,6 +51,16 @@ class _PythonScanCallback(static_proxy(ScanCallback)):
                 service_uuid.toString()
                 for service_uuid in service_uuids.toArray()  # was ArrayList
             ]
+
+            # Should probably use a ScanFilter on the startScan method,
+            # however, I'm doing this "post" result...
+            if self.scanner.service_uuids and not any(
+                uuid in self.scanner.service_uuids for uuid in service_uuids
+            ):
+                return
+        else:
+            if self.scanner.service_uuids:
+                return
 
         manufacturer = record.getManufacturerSpecificData()
         manufacturer = {
@@ -95,9 +106,11 @@ class _PythonScanCallback(static_proxy(ScanCallback)):
         scan_result[address] = (new_device, advertisement)
         if self.scanner.detection_callback:
             if inspect.iscoroutinefunction(self.scanner.detection_callback):
-                asyncio.create_task(
+                task = asyncio.create_task(
                     self.scanner.detection_callback(new_device, advertisement)
                 )
+                async_callbacks.add(task)
+                task.add_done_callback(async_callbacks.discard)
             else:
                 self.scanner.detection_callback(new_device, advertisement)
 
@@ -126,16 +139,16 @@ class AdvertisementData:
     def __repr__(self):
         kwargs = []
         if self.local_name:
-            kwargs.append(f"local_name={repr(self.local_name)}")
+            kwargs.append(f'local_name={repr(self.local_name)}')
         if self.manufacturer_data:
-            kwargs.append(f"manufacturer_data={repr(self.manufacturer_data)}")
+            kwargs.append(f'manufacturer_data={repr(self.manufacturer_data)}')
         if self.service_data:
-            kwargs.append(f"service_data={repr(self.service_data)}")
+            kwargs.append(f'service_data={repr(self.service_data)}')
         if self.service_uuids:
-            kwargs.append(f"service_uuids={repr(self.service_uuids)}")
+            kwargs.append(f'service_uuids={repr(self.service_uuids)}')
         if self.tx_power is not None:
-            kwargs.append(f"tx_power={repr(self.tx_power)}")
-        kwargs.append(f"rssi={repr(self.rssi)}")
+            kwargs.append(f'tx_power={repr(self.tx_power)}')
+        kwargs.append(f'rssi={repr(self.rssi)}')
         return f"AdvertisementData({', '.join(kwargs)})"
 
 
@@ -176,6 +189,10 @@ class Scanner:
                 'A BleakScanner is already scanning on this adapter.'
             )
 
+        scan_settings_builder = ScanSettings.Builder()
+        scan_settings_builder.setScanMode(self.scan_mode)
+        scan_settings = scan_settings_builder.build()
+
         check_for_permissions(self.activity)
 
         self.adapter = BluetoothAdapter.getDefaultAdapter()
@@ -192,7 +209,10 @@ class Scanner:
         self.callback = _PythonScanCallback(Scanner.scanner)
 
         scan_result.clear()
-        self.leScanner.startScan(self.callback)
+
+        # Could define a ScanFilter for name, address or service_uuids here
+        # (-->None), however, I keep the already working methods for now
+        self.leScanner.startScan(None, scan_settings, self.callback)
 
     async def stop(self):
         """Stop a running scan."""
