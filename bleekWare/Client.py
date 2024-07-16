@@ -20,13 +20,7 @@ from android.bluetooth import (
 from android.os import Build
 
 from . import BLEDevice, BLEGattService
-from . import bleekWareError, bleekWareCharacteristicNotFoundError
-
-
-received_data = []
-status_message = []
-services = []
-async_callbacks = set()
+from . import bleekWareError, bleekWareCharacteristicNotFoundError, logger
 
 # Client Characteristic Configuration Descriptor
 CCCD = '00002902-0000-1000-8000-00805f9b34fb'
@@ -46,12 +40,11 @@ class _PythonGattCallback(static_proxy(BluetoothGattCallback)):
         This is the callback function for Android's 'device.ConnectGatt'.
         """
         if newState == BluetoothProfile.STATE_CONNECTED:
-            status_message.append('connected')
+            logger.info('connected')
             gatt.discoverServices()
         elif newState == BluetoothProfile.STATE_DISCONNECTED:
-            status_message.append('disconnected')
+            logger.info('disconnected')
             gatt = None
-            services.clear()
             if self.client.disconnected_callback:
                 self.client.disconnected_callback()
 
@@ -61,9 +54,14 @@ class _PythonGattCallback(static_proxy(BluetoothGattCallback)):
 
         This is the callback function for Android's 'gatt.discoverServices'.
         """
-        services.extend(gatt.getServices().toArray())
-        # getServices returns an ArrayList, must be converted to Array to work
-        # with Python
+        services = list()
+        for gatt_service in gatt.getServices().toArray():
+            service = BLEGattService(gatt_service)
+            gatt_chars = gatt_service.getCharacteristics().toArray()
+            service.characteristics = [str(char.getUuid()) for char in gatt_chars]
+            services.append(service)
+
+        self.client.services = services
 
     @Override(
         jvoid,
@@ -85,7 +83,7 @@ class _PythonGattCallback(static_proxy(BluetoothGattCallback)):
         else:
             value = args[0]
         if status == BluetoothGatt.GATT_SUCCESS:
-            received_data.append(value)
+            self.client._received_data.append(value)
 
     @Override(
         jvoid, [BluetoothGatt, BluetoothGattCharacteristic, jarray(jbyte)]
@@ -95,7 +93,7 @@ class _PythonGattCallback(static_proxy(BluetoothGattCallback)):
 
         This is the callback function for notifying services.
         """
-        received_data.append(characteristic.getValue())
+        self.client._received_data.append(characteristic.getValue())
 
     @Override(jvoid, [BluetoothGatt, jint, jint])
     def onMtuChanged(self, gatt, mtu, status):
@@ -119,6 +117,10 @@ class Client:
         services=None,
         **kwargs,
     ):
+        self.__async_callbacks = set()
+        self._received_data = list()
+        self.__services = list()
+
         self.activity = self.context = jclass(
             'org.beeware.android.MainActivity'
         ).singletonThis
@@ -141,7 +143,6 @@ class Client:
             raise NotImplementedError()
         self.adapter = None
         self.gatt = None
-        self._services = []
         self.mtu = 23
 
     def __str__(self):
@@ -165,20 +166,20 @@ class Client:
         if self.gatt is not None:
             self.gatt.connect()
         else:
-            # Make a reference for external access
-            Client.client = self
+            # The services list will be re-filled by a callback later on.
+            self.__services.clear()
 
             # Create a GATT connection
-            self.gatt_callback = _PythonGattCallback(Client.client)
+            self.gatt_callback = _PythonGattCallback(self)
             self.gatt = self.device.connectGatt(
                 self.activity, False, self.gatt_callback
             )
             self.gatt_callback.gatt = self.gatt
 
-            # Read the services
-            while not services:
+            # Wait for the services to be received through the
+            # _PythonGattCallback.onServicesDiscovered call.
+            while not self.__services:
                 await asyncio.sleep(0.1)
-            self._services = await self._get_services()
 
             # Ask for max Mtu size
             self.gatt.requestMtu(517)
@@ -193,14 +194,11 @@ class Client:
             self.gatt.disconnect()
             self.gatt.close()
         except Exception as e:
-            status_message.append(e)
+            logger.error(f'Error disconnecting from client: "{e}"')
 
         self.gatt = None
-        self._services.clear()
-        services.clear()
-        status_message.clear()
-        received_data.clear()
-        Client.client = None
+        self._received_data.clear()
+        self.__services.clear()
 
         return True  # For Bleak backwards compatibility
 
@@ -225,15 +223,15 @@ class Client:
 
             # Send received data to callback function
             while self.notification_callback:
-                if received_data:
-                    data = received_data.pop()
+                if self._received_data:
+                    data = self._received_data.pop()
                     if inspect.iscoroutinefunction(callback):
                         task = asyncio.create_task(
                             callback(characteristic, bytearray(data))
                         )
                         # Make 'hard' reference to avoid GCing of the task
-                        async_callbacks.add(task)
-                        task.add_done_callback(async_callbacks.discard)
+                        self.__async_callbacks.add(task)
+                        task.add_done_callback(self.__async_callbacks.discard)
                     else:
                         callback(characteristic, bytearray(data))
                 await asyncio.sleep(0.1)
@@ -260,9 +258,9 @@ class Client:
         characteristic = self._find_characteristic(uuid)
         if characteristic:
             self.gatt.readCharacteristic(characteristic)
-            while not received_data:
+            while not self._received_data:
                 await asyncio.sleep(0.1)
-            return bytearray(received_data.pop())
+            return bytearray(self._received_data.pop())
         else:
             raise bleekWareCharacteristicNotFoundError(uuid)
 
@@ -319,28 +317,18 @@ class Client:
 
         As list of BLEGattService objects.
         """
-        if not self._services:
+        if not self.__services:
             raise bleekWareError(
                 'Service Discovery has not been performed yet'
             )
 
-        return self._services
+        return self.__services
 
-    async def _get_services(self):
-        """Read and store the announced services of a GATT server. PRIVAT.
-
-        The characteristics of the services are also read. Both are
-        stored in a list of BLEGattService objects.
-        """
-        if self._services:
-            return self._services
-        for service in services:
-            new_service = BLEGattService(service)
-            characts = service.getCharacteristics().toArray()
-            for charact in characts:
-                new_service.characteristics.append(str(charact.getUuid()))
-            self._services.append(new_service)
-        return self._services
+    @services.setter
+    def services(self, value):
+        """Update the list of services."""
+        self.__services.clear()
+        self.__services.extend(value)
 
     def _find_characteristic(self, uuid):
         """Find and return characteristic object by UUID. PRIVATE."""
@@ -348,7 +336,7 @@ class Client:
             uuid = f'0000{uuid}-0000-1000-8000-00805f9b34fb'
         elif len(uuid) == 8:
             uuid = f'{uuid}-0000-1000-8000-00805f9b34fb'
-        for service in self._services:
+        for service in self.__services:
             if uuid in service.characteristics:
                 return service.service.getCharacteristic(UUID.fromString(uuid))
         return None
