@@ -117,7 +117,7 @@ BATTERY_UUID = '00002a19-0000-1000-8000-00805f9b34fb'
 class bleekWareExample(toga.App):
 
     def startup(self):
-        ""Build a little GUI."""
+        """Build a little GUI."""
         self.scan_button = Button(
             'Scan for BLE devices', on_press=self.search_device
         )
