@@ -11,8 +11,14 @@ Bleak.
 MIT license
 """
 
+import logging
 from java import jclass
 from android.os import Build
+
+
+# Set up logging for this module.
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(name='bleakWare')
 
 
 class BLEDevice:
