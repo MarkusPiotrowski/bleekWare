@@ -142,7 +142,7 @@ class bleekWareExample(toga.App):
         self.main_window.show()
 
     async def search_device(self, widget):
-        """Search for BLE device by SID."""
+        """Search for BLE device by name."""
         device = None
         self.message_box.value = 'Start BLE scan...\n'
         try:
