@@ -110,7 +110,6 @@ class _PythonGattCallback(static_proxy(BluetoothGattCallback)):
                 self.client.notification_callback(
                     characteristic, bytearray(data)
                 )
-        # self.client._received_data.append(characteristic.getValue())
 
     @Override(jvoid, [BluetoothGatt, jint, jint])
     def onMtuChanged(self, gatt, mtu, status):
