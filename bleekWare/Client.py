@@ -321,9 +321,7 @@ class Client:
         As list of BLEGattService objects.
         """
         if not self.__services:
-            raise bleekWareError(
-                'Service Discovery has not been performed yet'
-            )
+            raise bleekWareError('Service Discovery has not been performed yet')
 
         return self.__services
 
