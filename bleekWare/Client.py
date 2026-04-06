@@ -58,7 +58,9 @@ class _PythonGattCallback(static_proxy(BluetoothGattCallback)):
         for gatt_service in gatt.getServices().toArray():
             service = BLEGattService(gatt_service)
             gatt_chars = gatt_service.getCharacteristics().toArray()
-            service.characteristics = [str(char.getUuid()) for char in gatt_chars]
+            service.characteristics = [
+                str(char.getUuid()) for char in gatt_chars
+            ]
             services.append(service)
 
         self.client.services = services
@@ -93,7 +95,22 @@ class _PythonGattCallback(static_proxy(BluetoothGattCallback)):
 
         This is the callback function for notifying services.
         """
-        self.client._received_data.append(characteristic.getValue())
+        if self.client.notification_callback:
+            data = characteristic.getValue()
+            if inspect.iscoroutinefunction(self.client.notification_callback):
+                task = self.client.loop.create_task(
+                    self.client.notification_callback(
+                        characteristic, bytearray(data)
+                    )
+                )
+                # Make 'hard' reference to avoid GCing of the task
+                self.client._async_callbacks.add(task)
+                task.add_done_callback(self.client._async_callbacks.discard)
+            else:
+                self.client.notification_callback(
+                    characteristic, bytearray(data)
+                )
+        # self.client._received_data.append(characteristic.getValue())
 
     @Override(jvoid, [BluetoothGatt, jint, jint])
     def onMtuChanged(self, gatt, mtu, status):
@@ -214,27 +231,13 @@ class Client:
         self.notification_callback = callback
         characteristic = self._find_characteristic(uuid)
         if characteristic:
+            self.loop = asyncio.get_event_loop()
             self.gatt.setCharacteristicNotification(characteristic, True)
             descriptor = characteristic.getDescriptor(UUID.fromString(CCCD))
             descriptor.setValue(
                 BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
             )
             self.gatt.writeDescriptor(descriptor)
-
-            # Send received data to callback function
-            while self.notification_callback:
-                if self._received_data:
-                    data = self._received_data.pop()
-                    if inspect.iscoroutinefunction(callback):
-                        task = asyncio.create_task(
-                            callback(characteristic, bytearray(data))
-                        )
-                        # Make 'hard' reference to avoid GCing of the task
-                        self.__async_callbacks.add(task)
-                        task.add_done_callback(self.__async_callbacks.discard)
-                    else:
-                        callback(characteristic, bytearray(data))
-                await asyncio.sleep(0.1)
 
     async def stop_notify(self, uuid):
         """Stop notification of a notifying characteristic."""
@@ -318,9 +321,7 @@ class Client:
         As list of BLEGattService objects.
         """
         if not self.__services:
-            raise bleekWareError(
-                'Service Discovery has not been performed yet'
-            )
+            raise bleekWareError('Service Discovery has not been performed yet')
 
         return self.__services
 

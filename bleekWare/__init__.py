@@ -6,10 +6,12 @@ The code is heavily inspired by Bleak (https://github.com/hbldh/bleak).
 Some parts may virtually be identical for the sake of compatibility to
 Bleak.
 
-(c) 2024 by Markus Piotrowski
+(c) 2024-2026 by Markus Piotrowski
 
 MIT license
 """
+
+__version__ = '0.3.0'
 
 import logging
 from java import jclass
@@ -70,7 +72,6 @@ class bleekWareDeviceNotFoundError(bleekWareError):
 
 
 class BLEGattService:
-
     def __init__(self, service):
         self.service = service
         self.characteristics = []
