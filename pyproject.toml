@@ -12,6 +12,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 license = { text = "MIT" }
+
+[tool.setuptools]
 license-files = ["LICEN[CS]E*"]
 
 [project.urls]
