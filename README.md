@@ -7,6 +7,7 @@ A limited Bleak complement for accessing Bluetooth LE on Android in Python apps 
 Bleak, the 'Bluetooth Low Energy platform Agnostic Klient', allows using Python to access Bluetooth LE cross-platform, but it's existing platform backend for Android requires [python-for-android (P4A)](https://python-for-android.readthedocs.io/en/latest/index.html). This can be used e.g. in [Kivy](https://kivy.org/) but not in BeeWare, because BeeWare uses [Chaquopy](https://chaquo.com/chaquopy/) as bridging tool between Python and Android.
 
 > For discussion if the existing Android backend of Bleak can be modified for using it in BeeWare or to add another Android backend to Bleak, read [here](https://github.com/beeware/toga/issues/740), [here](https://github.com/beeware/beeware/issues/181) and [here](https://github.com/hbldh/bleak/blob/5e294f4fcdc3effac147d43e29697373e3209901/docs/backends/android.rst#L14).
+ 
  Update: There is a [current pull request](https://github.com/hbldh/bleak/pull/1944) to add a new Android backend to Bleak for using BeeWare.
 
 bleekWare makes use of Chaquopy to access the native Android's Bluetooth LE APIs. bleekWare is 'usage compatible' to Bleak, meaning that it's methods have the same names and return (mostly) the same data as Bleak. Thus, using platform-dependent import switches, the same code can run on Linux, Mac and Windows using Bleak or on Android using bleekWare. However, bleekWare is _not_ dependent on Bleak; if your Python app should only run on Android you don't need to install or import Bleak in addition to bleekWare.
@@ -21,15 +22,16 @@ bleekWare is a _limited_ complement for Bleak. Not all functions are covered:
 6. ~~Callback functions (like `detection_callback` or `notify_callback`)in bleekWare can't be _asynchronous_~~
 
 ## How to use it
-The current set-up procedure requires some manual intervention and puts the bleekWare code next to your app code. This may change in the future.
+The current set-up procedure requires some manual intervention:
 
 1. Set up a virtual environment to start a new BeeWare project as described in the [BeeWare tutorial](https://tutorial.beeware.org/)
-2. Write and test some code for a desktop computer (Linux, Mac or Window) using Bleak to access Bluetooth LE
-3. Before setting up an Android project, copy the following lines into the `tool.briefcase.app.bluetooth.android` section of your `pyproject.toml` file, e.g. below the
+2. Install bleekWare from GitHub via pip: `python -m pip install git+https://github.com/MarkusPiotrowski/bleekWare`
+3. Write and test some code for a desktop computer (Linux, Mac or Window) using Bleak to access Bluetooth LE
+4. Before setting up an Android project, copy the following lines into the `tool.briefcase.app.bluetooth.android` section of your `pyproject.toml` file, e.g. below the
 `build_gradle_dependencies`:
 
    ```
-   build_gradle_extra_content = "android.defaultConfig.python.staticProxy('your_project.bleekWare.Scanner',  'your_project.bleekWare.Client')"
+   build_gradle_extra_content = "android.defaultConfig.python.staticProxy('bleekWare.Scanner',  'bleekWare.Client')"
    android_manifest_extra_content = """
    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
@@ -39,39 +41,26 @@ The current set-up procedure requires some manual intervention and puts the blee
    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
    """
    ```
-   
-   Replace `your_project` with the actual folder name of your project.
-5. If your code runs fine on your desktop platform, set up an Android project as described in the [BeeWare tutorial](https://tutorial.beeware.org/tutorial/tutorial-5/)
-6. Now, download the [bleekWare module as zip file](https://github.com/MarkusPiotrowski/bleekWare/releases/download/0.3.0/bleekWare.zip) and place the unzipped bleekWare subfolder in your apps's folder:
+      
+5. Also add bleekWare as an installation requirement for Android in the `pyproject.tom` file:
 
    ```
-   beeware_venv/
-   |- your_project/
-      |- build/
-      |- logs/
-      |- src/
-      |  |- your_project/
-      |  |  |- bleekWare/         <---
-      |  |  |  |- __init__.py
-      |  |  |  |- Client.py
-      |  |  |  |- Scanner.py
-      |  |  |- resources/
-      |  |  |- __init__.py
-      |  |  |- __main__.py
-      |  |  |- app.py
-      |  |- your_project.dist-info/
-      |- tests/
-    ...
-   ```
-   Note: If you use the 'Download ZIP' option from the `<> Code` button above, the download will contain the whole repository. Copy only the bleekWare subfolder to your project.
-8. If your application should run cross-platform and you require both Bleak and bleekWare, you may want to use conditional imports like this:
+   [tool.briefcase.app.YOURPROJECT.android]
+   requires = [
+       "toga-android......",
+	   "git+https://github.com/MarkusPiotrowski/bleekWare",
+	]
+	```
+	
+6. If your code runs fine on your desktop platform, set up an Android project as described in the [BeeWare tutorial](https://tutorial.beeware.org/tutorial/tutorial-5/)
+7. If your application should run cross-platform and you require both Bleak and bleekWare, you may want to use conditional imports like this:
    ```python
    import toga
 
    if toga.platform.current_platform == 'android':
-      from .bleekWare import bleekWareError as BLEError
-      from .bleekWare.Client import Client as Client
-      from .bleekWare.Scanner import Scanner as Scanner  
+      from bleekWare import bleekWareError as BLEError
+      from bleekWare.Client import Client as Client
+      from bleekWare.Scanner import Scanner as Scanner  
    else:
       from bleak import BleakError as BLEError
       from bleak import BleakClient as Client
@@ -100,9 +89,9 @@ from toga.style.pack import COLUMN
 from toga import Button, MultilineTextInput
 
 if toga.platform.current_platform == 'android':
-    from .bleekWare import bleekWareError as BLEError
-    from .bleekWare.Client import Client as Client
-    from .bleekWare.Scanner import Scanner as Scanner
+    from bleekWare import bleekWareError as BLEError
+    from bleekWare.Client import Client as Client
+    from bleekWare.Scanner import Scanner as Scanner
 else:
     from bleak import BleakError as BLEError
     from bleak import BleakScanner as Scanner
