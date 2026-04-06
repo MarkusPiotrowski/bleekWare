@@ -42,7 +42,7 @@ The current set-up procedure requires some manual intervention:
    """
    ```
       
-5. Also add bleekWare as an installation requirement for Android in the `pyproject.tom` file:
+5. Also add bleekWare as an installation requirement for Android in the `pyproject.toml` file:
 
    ```
    [tool.briefcase.app.YOURPROJECT.android]
