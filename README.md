@@ -7,6 +7,7 @@ A limited Bleak complement for accessing Bluetooth LE on Android in Python apps 
 Bleak, the 'Bluetooth Low Energy platform Agnostic Klient', allows using Python to access Bluetooth LE cross-platform, but it's existing platform backend for Android requires [python-for-android (P4A)](https://python-for-android.readthedocs.io/en/latest/index.html). This can be used e.g. in [Kivy](https://kivy.org/) but not in BeeWare, because BeeWare uses [Chaquopy](https://chaquo.com/chaquopy/) as bridging tool between Python and Android.
 
 > For discussion if the existing Android backend of Bleak can be modified for using it in BeeWare or to add another Android backend to Bleak, read [here](https://github.com/beeware/toga/issues/740), [here](https://github.com/beeware/beeware/issues/181) and [here](https://github.com/hbldh/bleak/blob/5e294f4fcdc3effac147d43e29697373e3209901/docs/backends/android.rst#L14).
+ Update: There is a [current pull request](https://github.com/hbldh/bleak/pull/1944) to add a new Android backend to Bleak for using BeeWare.
 
 bleekWare makes use of Chaquopy to access the native Android's Bluetooth LE APIs. bleekWare is 'usage compatible' to Bleak, meaning that it's methods have the same names and return (mostly) the same data as Bleak. Thus, using platform-dependent import switches, the same code can run on Linux, Mac and Windows using Bleak or on Android using bleekWare. However, bleekWare is _not_ dependent on Bleak; if your Python app should only run on Android you don't need to install or import Bleak in addition to bleekWare.
 
@@ -22,7 +23,7 @@ bleekWare is a _limited_ complement for Bleak. Not all functions are covered:
 ## How to use it
 The current set-up procedure requires some manual intervention and puts the bleekWare code next to your app code. This may change in the future.
 
-1. Set up a virtual environment to start a new BeeWare project as described in the [BeeWare tutorial](https://docs.beeware.org/en/latest/)
+1. Set up a virtual environment to start a new BeeWare project as described in the [BeeWare tutorial](https://tutorial.beeware.org/)
 2. Write and test some code for a desktop computer (Linux, Mac or Window) using Bleak to access Bluetooth LE
 3. Before setting up an Android project, copy the following lines into the `tool.briefcase.app.bluetooth.android` section of your `pyproject.toml` file, e.g. below the
 `build_gradle_dependencies`:
@@ -40,8 +41,8 @@ The current set-up procedure requires some manual intervention and puts the blee
    ```
    
    Replace `your_project` with the actual folder name of your project.
-5. If your code runs fine on your desktop platform, set up an Android project as described in the [BeeWare tutorial](https://docs.beeware.org/en/latest/tutorial/tutorial-5/android.html>)
-6. Now, download the [bleekWare module as zip file](https://github.com/MarkusPiotrowski/bleekWare/releases/download/0.2.0/bleekWare.zip) and place the unzipped bleekWare subfolder in your apps's folder:
+5. If your code runs fine on your desktop platform, set up an Android project as described in the [BeeWare tutorial](https://tutorial.beeware.org/tutorial/tutorial-5/)
+6. Now, download the [bleekWare module as zip file](https://github.com/MarkusPiotrowski/bleekWare/releases/download/0.3.0/bleekWare.zip) and place the unzipped bleekWare subfolder in your apps's folder:
 
    ```
    beeware_venv/
