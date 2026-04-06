@@ -1,0 +1,23 @@
+[project]
+name = "bleekWare"
+version = "0.3.1"
+authors = [
+  { name="Markus Piotrowski", email="author@example.com" },
+]
+description = "A limited Bleak complement for accessing Bluetooth LE on Android in Python apps made with BeeWare"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/MarkusPiotrowski/bleekWare"
+Issues = "https://github.com/MarkusPiotrowski/bleekWare/issues"
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
