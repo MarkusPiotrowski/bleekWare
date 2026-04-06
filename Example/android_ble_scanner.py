@@ -10,7 +10,7 @@ from toga.style import Pack
 from toga.style.pack import COLUMN
 
 if toga.platform.current_platform == 'android':
-    from .bleekWare.Scanner import Scanner as Scanner
+    from bleekWare.Scanner import Scanner as Scanner
 else:
     from bleak import BleakScanner as Scanner
 
