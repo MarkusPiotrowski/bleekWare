@@ -11,6 +11,8 @@ Bleak.
 MIT license
 """
 
+__version__ = '0.3.0'
+
 import logging
 from java import jclass
 from android.os import Build
@@ -70,7 +72,6 @@ class bleekWareDeviceNotFoundError(bleekWareError):
 
 
 class BLEGattService:
-
     def __init__(self, service):
         self.service = service
         self.characteristics = []
