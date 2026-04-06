@@ -19,5 +19,5 @@ Homepage = "https://github.com/MarkusPiotrowski/bleekWare"
 Issues = "https://github.com/MarkusPiotrowski/bleekWare/issues"
 
 [build-system]
-requires = ["setuptools >= 77.0.3"]
+requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
