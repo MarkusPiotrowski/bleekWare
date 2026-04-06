@@ -6,7 +6,7 @@ authors = [
 ]
 description = "A limited Bleak complement for accessing Bluetooth LE on Android in Python apps made with BeeWare"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
