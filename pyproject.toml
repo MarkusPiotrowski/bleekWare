@@ -16,6 +16,10 @@ license = { text = "MIT" }
 [tool.setuptools]
 license-files = ["LICEN[CS]E*"]
 
+[tool.setuptools.packages.find]
+include = ["bleekWare*"]
+exclude = ["Example*"]
+
 [project.urls]
 Homepage = "https://github.com/MarkusPiotrowski/bleekWare"
 Issues = "https://github.com/MarkusPiotrowski/bleekWare/issues"
