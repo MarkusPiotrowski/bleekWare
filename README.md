@@ -27,11 +27,11 @@ The current set-up procedure requires some manual intervention:
 1. Set up a virtual environment to start a new BeeWare project as described in the [BeeWare tutorial](https://tutorial.beeware.org/)
 2. Install bleekWare from GitHub via pip: `python -m pip install git+https://github.com/MarkusPiotrowski/bleekWare`
 3. Write and test some code for a desktop computer (Linux, Mac or Window) using Bleak to access Bluetooth LE
-4. Before setting up an Android project, copy the following lines into the `tool.briefcase.app.bluetooth.android` section of your `pyproject.toml` file, e.g. below the
+4. Before setting up an Android project, copy the following lines into the `tool.briefcase.app.YOURPROJECT.android` section of your `pyproject.toml` file, e.g. below the
 `build_gradle_dependencies`:
 
    ```
-   build_gradle_extra_content = "android.defaultConfig.python.staticProxy('bleekWare.Scanner',  'bleekWare.Client')"
+   build_gradle_extra_content = "android.defaultConfig.python.staticProxy('bleekWare.Scanner', 'bleekWare.Client')"
    android_manifest_extra_content = """
    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
