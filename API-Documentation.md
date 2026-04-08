@@ -28,7 +28,7 @@ is detected or advertising data of a detected device changes
 
 The **detection_callback** must receive a `BLEDevice` object and an `AdvertisementData`
 object. **scanning_mode** `'active'` sets Android's `ScanSettings.SCAN_MODE_LOW_LATENCY`, 
-`'active'` sets `ScanSettings.SCAN_MODE_OPPORTUNISTIC`.
+`'passive'` sets `ScanSettings.SCAN_MODE_OPPORTUNISTIC`.
 
 #### Differences to `BleakScanner`
 Additional keyword arguments are not handled.
